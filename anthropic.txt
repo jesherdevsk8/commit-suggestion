@@ -1,0 +1,46 @@
+sudo apt install jq
+
+DIFF="diff --git a/app/models/user.rb b/app/models/user.rb
+index 1234567..89abcdef 100644
+--- a/app/models/user.rb
++++ b/app/models/user.rb
+@@ -10,6 +10,7 @@ class User < ApplicationRecord
+   validates :email, presence: true, uniqueness: true
+   has_secure_password
+
++  validates :name, presence: true
+ end"
+
+ANTHROPIC_API_KEY=
+
+# curl https://api.anthropic.com/v1/messages \
+#      --header "x-api-key: $ANTHROPIC_API_KEY" \
+#      --header "anthropic-version: 2023-06-01" \
+#      --header "content-type: application/json" \
+#      --data \
+# '{
+#     "model": "claude-3-7-sonnet-20250219",
+#     "max_tokens": 1024,
+#     "messages": [
+#         {"role": "user", "content": "Hello, world"}
+#     ]
+# }'
+
+response=$(curl --silent --show-error https://api.anthropic.com/v1/messages \
+  --header "x-api-key: $ANTHROPIC_API_KEY" \
+  --header "anthropic-version: 2023-06-01" \
+  --header "content-type: application/json" \
+  --data "$(jq -n --arg diff "$DIFF" '{
+    model: "claude-3-7-sonnet-20250219",
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "user",
+        content: "Generate a semantic and meaningful Git commit message in English for the following code diff. Use the Conventional Commits specification (e.g., feat:, fix:, chore:, refactor:). Be concise and return only the commit message:\n\n\($diff)"
+      }
+    ]
+  }')")
+
+echo "$response"
+echo "$response" | jq -r '.content[0].text'
+
