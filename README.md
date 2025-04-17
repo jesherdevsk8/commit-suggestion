@@ -5,7 +5,8 @@ Generates short and semantically correct commit messages based on a code diff.
 ## Installation
 
 1. `curl -L https://raw.githubusercontent.com/jesherdevsk8/commit-suggestion/master/commit_suggestion.rb -o /usr/local/bin/commit`
-2. Replace `api_key` in the script with your Anthropics API key
+2. Add the following line to your shell configuration file (e.g. `~/.bashrc`):
+   `export ANTHROPIC_API_KEY=sk-ant-api.......`
 
 ## Usage
 
