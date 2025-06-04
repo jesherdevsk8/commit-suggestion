@@ -7,7 +7,7 @@ require 'net/http'
 require 'uri'
 
 # sudo ln -s ~/projects/commit-suggestion/commit_suggestion.rb /usr/local/bin/commit
-api_key = ENV['ANTHROPIC_API_KEY']
+api_key = ENV.fetch('ANTHROPIC_API_KEY', nil)
 
 unless api_key
   puts 'Erro: a variável de ambiente ANTHROPIC_API_KEY não está definida.'
@@ -23,8 +23,13 @@ end
 
 prompt = <<~PROMPT
   Generate a semantic and meaningful Git commit message in English for the following code diff.
-  Use the Conventional Commits specification (e.g., feat:, fix:, chore:, refactor:).
-  Be concise and return only the commit message:
+  - Use the Conventional Commits specification (e.g., feat:, fix:, chore:, refactor:).
+  - Be concise and return only the commit message:
+  - The branch name should be in kebab-case, start with the commit type (e.g., feat/, fix/, chore/), and contain no more than 4 words.
+
+  Format:
+  Commit Message: <your commit message>
+  Branch Name: <your-branch-name-in-kebab-case>
 
   #{diff}
 PROMPT
@@ -54,20 +59,31 @@ response = http.request(request)
 
 begin
   parsed = JSON.parse(response.body)
-  message = parsed.dig('content', 0, 'text')&.strip
+  content = parsed.dig('content', 0, 'text')&.strip
 
-  unless message
-    puts 'Erro: mensagem não encontrada na resposta da API.'
+  unless content
+    puts 'Erro: content não encontrada na resposta da API.'
     puts response.body
     exit 1
   end
 
   # Remove blocos de markdown (```...```)
-  commit_msg = message.gsub(/^```|```$/, '').strip
+  clean_content = content.gsub(/^```|```$/, '').strip
+
+  # Extrai commit message e nome da branch usando regex
+  commit_msg = clean_content[/Commit Message:\s*(.+)/i, 1]&.strip
+  branch_name = clean_content[/Branch Name:\s*(.+)/i, 1]&.strip
+
+  unless commit_msg && branch_name
+    puts 'Erro ao extrair commit message ou branch name da resposta.'
+    puts clean_content
+    exit 1
+  end
 
   # puts "Mensagem de commit gerada: #{commit_msg}"
+  # puts "Nome da branch gerado: #{branch_name}"
 
-  # Realiza o commit
+  system("git checkout -b #{branch_name}")
   system("git commit -m \"#{commit_msg}\"")
 rescue JSON::ParserError
   puts 'Erro ao interpretar resposta JSON da API:'
