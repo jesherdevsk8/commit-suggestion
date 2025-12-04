@@ -1,0 +1,43 @@
+# Instalar jq se necessário
+sudo apt install jq
+
+# List models
+# curl "https://api.groq.com/openai/v1/models" -H "Authorization: Bearer $GROQ_API_KEY"
+
+DIFF="diff --git a/app/models/user.rb b/app/models/user.rb
+
+index 1234567..89abcdef 100644
+
+--- a/app/models/user.rb
+
++++ b/app/models/user.rb
+
+@@ -10,6 +10,7 @@ class User < ApplicationRecord
+
+   validates :email, presence: true, uniqueness: true
+
+   has_secure_password
+
++  validates :name, presence: true
+
+ end"
+
+export GROQ_API_KEY=
+
+response=$(curl --silent --show-error https://api.groq.com/openai/v1/chat/completions \
+  --header "Authorization: Bearer $GROQ_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data "$(jq -n --arg diff "$DIFF" '{
+    model: "llama-3.3-70b-versatile",
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "user",
+        content: "Generate a semantic and meaningful Git commit message in English for the following code diff. Use the Conventional Commits specification (e.g., feat:, fix:, chore:, refactor:). Be concise and return only the commit message:\n\n\($diff)"
+      }
+    ]
+  }')")
+
+echo "$response"
+echo "---"
+echo "$response" | jq -r '.choices[0].message.content'
