@@ -83,7 +83,7 @@ begin
   # puts "Mensagem de commit gerada: #{commit_msg}"
   # puts "Nome da branch gerado: #{branch_name}"
 
-  system("git checkout -b #{branch_name}")
+  system("git checkout -b #{branch_name}") if ARGV.include?('--with-branch') && ARGV.size == 1
   system("git commit -m \"#{commit_msg}\"")
 rescue JSON::ParserError
   puts 'Erro ao interpretar resposta JSON da API:'
