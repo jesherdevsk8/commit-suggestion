@@ -19,7 +19,7 @@ ANTHROPIC_API_KEY=
 #      --header "content-type: application/json" \
 #      --data \
 # '{
-#     "model": "claude-3-7-sonnet-20250219",
+#     "model": "claude-opus-4-5-20251101",
 #     "max_tokens": 1024,
 #     "messages": [
 #         {"role": "user", "content": "Hello, world"}
@@ -31,7 +31,7 @@ response=$(curl --silent --show-error https://api.anthropic.com/v1/messages \
   --header "anthropic-version: 2023-06-01" \
   --header "content-type: application/json" \
   --data "$(jq -n --arg diff "$DIFF" '{
-    model: "claude-3-7-sonnet-20250219",
+    model: "claude-opus-4-5-20251101",
     max_tokens: 1024,
     messages: [
       {
